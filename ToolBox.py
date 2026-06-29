@@ -1,7 +1,7 @@
 import sys
 
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QDialog, QFormLayout, QDialogButtonBox
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QDialog, QFormLayout, QDialogButtonBox, QMessageBox
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction
 
 from logic import ActionLogic
@@ -65,6 +65,7 @@ class MainWindow(QMainWindow):
                 self.setGeometry(200,150,1100,500)
 
                 self.logic = ActionLogic(self) #Passes MainWindow aka self to ActionLogic to reference.
+                self.bootstrap_complete = None
 
                 # Apply a dark style (simple but effective)
                 self.setStyleSheet("""
@@ -117,14 +118,17 @@ class MainWindow(QMainWindow):
                 billing_section.addWidget(QLabel("Billing Code: "))
                 self.input_billing = QLineEdit()
                 billing_section.addWidget(self.input_billing)
-                #Action buttons to update AD.
+                ##############################AD ACTION BUTTONS ############################
                 self.btn_updateBilling = QPushButton("Update Billing")
                 self.btn_disableComp = QPushButton("Disable Computer")
                 self.btn_removeComp = QPushButton("Remove Computer")
+                self.btn_disableComp.clicked.connect(self.logic.btn_disableComp_pressed)
+                self.btn_updateBilling.clicked.connect(self.logic.btn_updateBilling_pressed)
+                self.btn_removeComp.clicked.connect(self.logic.btn_removeComp_pressed)
                 billing_section.addWidget(self.btn_updateBilling)
                 billing_section.addWidget(self.btn_disableComp)
                 billing_section.addWidget(self.btn_removeComp)
-
+                
                 layout.addLayout(billing_section)
 
                 #Output Areas
@@ -174,19 +178,38 @@ class MainWindow(QMainWindow):
                 action_menu.addAction(ipconfig_action)
                 action_menu.addAction(gpupdate_action)
 
+        def check_worker_results(self):
+                while not self.logic.result_queue.empty():
+                        result_type, result_text = self.logic.result_queue.get()
+                        if result_type == "bootstrap":
+                                if "[IOT] creds initialized" in result_text:
+                                        print("Bootstrap succeeded!")
+                                        self.show()
+                                else:
+                                        print("Bootstrap failed:", result_text)
+                                        sys.exit(1)
+                        elif result_type == "normal":
+                                self.cmd_output.append(str(result_text))
+                        elif result_type == "error":
+                                self.cmd_output.append(str(result_text))
+
 app = QApplication(sys.argv)
 
+print(MainWindow.__init__)
 window = MainWindow()
+window.show()
 
 cred_dlg = CredentialDialog(window)
 if cred_dlg.exec() == QDialog.DialogCode.Accepted:
         u, p = cred_dlg.values()
-        window.logic.start_ps_session(u, p)
+        ok = window.logic.start_ps_session(u, p)
+        if not ok:
+                print("Powershell session failed to initialize.")
 else:
         sys.exit(0)
 
-
-window.show()
-
+window.result_timer = QTimer()
+window.result_timer.timeout.connect(window.check_worker_results)
+window.result_timer.start(100) #check every 100ms
 # Start the event loop.
 app.exec()
