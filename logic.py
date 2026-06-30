@@ -96,13 +96,6 @@ class ActionLogic(QObject):
             print("ERROR: PowerShell process terminated immediately.")
             self.ps=None
             return False
-        
-        try:
-            u_b64 = base64.b64encode(username.encode("utf-16le")).decode("ascii")
-            p_b64 = base64.b64encode(password.encode("utf-16le")).decode("ascii")
-        except Exception as e:
-            print(f"ERROR: Failed to base64-encode credentials: {e}")
-            return False
 
         script = r".\PS_Scripts\InitiateCreds.ps1"
         bootstrap = fr"& '{script}' -username '{username}' -pswd '{password}'"
