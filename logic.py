@@ -104,16 +104,10 @@ class ActionLogic(QObject):
             print(f"ERROR: Failed to base64-encode credentials: {e}")
             return False
 
-        bootstrap = rf"""
-$u = [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('{u_b64}'))
-$pwdPlain = [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('{p_b64}'))
-$sec = ConvertTo-SecureString -String $pwdPlain -AsPlainText -Force
-$creds = New-Object System.Management.Automation.PSCredential ($u, $sec)
-Remove-Variable u,pwdPlain,sec -ErrorAction SilentlyContinue
-Write-Output '[IOT] creds initialized'
-"""
+        script = r".\PS_Scripts\InitiateCreds.ps1"
+        bootstrap = fr"& '{script}' -username '{username}' -pswd '{password}'"
         try:
-            self.cmd_queue.put(("bootstrap",bootstrap))
+            self.cmd_queue.put(("bootstrap", bootstrap))
         except Exception as e:
             print(f"ERROR: run_ps() failed during bootstrap: {e}")
             return False

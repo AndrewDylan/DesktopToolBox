@@ -184,10 +184,10 @@ class MainWindow(QMainWindow):
                         if result_type == "bootstrap":
                                 if "[IOT] creds initialized" in result_text:
                                         print("Bootstrap succeeded!")
-                                        self.show()
+                                        self.cmd_output.append(str(result_text))
                                 else:
                                         print("Bootstrap failed:", result_text)
-                                        sys.exit(1)
+                                        QApplication.instance().quit()
                         elif result_type == "normal":
                                 self.cmd_output.append(str(result_text))
                         elif result_type == "error":

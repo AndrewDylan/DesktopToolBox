@@ -3,5 +3,10 @@ param(
     [string]$billCode
 )
 
-Set-ADComputer -Identity $computer -Replace @{departmentNumber = $billCode} -Credential $creds
-Write-Output "[DONE]"
+try {
+    Set-ADComputer -Identity $computer -Replace @{departmentNumber = $billCode} -Credential $GLOBAL:creds
+    Write-Output "[DONE]"
+}
+catch {
+    Write-Out ("[ERROR] " + $_.Exception.Message)
+}
