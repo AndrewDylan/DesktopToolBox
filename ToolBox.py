@@ -143,7 +143,20 @@ class MainWindow(QMainWindow):
 
         def build_menu_bar(self):
                 menu_bar = self.menuBar()
-                menu_bar.setStyleSheet("background-color: #1a1a1a; color: white;")
+
+                style_sheet = """
+                        QMenuBar::item:selected {
+                                background-color: #696969;
+                                color: white;
+                        }
+                        QMenu::item:selected {
+                                background-color: #696969;
+                                color: white;
+                        }
+                        QMenuBar {background-color: #1a1a1a; color: white;}
+                        QMenu {background-color: #1a1a1a; color: white;}
+                """
+                menu_bar.setStyleSheet(style_sheet)
 
                 # FILE Menu
                 file_menu = menu_bar.addMenu("File")
