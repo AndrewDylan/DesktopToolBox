@@ -193,6 +193,11 @@ class MainWindow(QMainWindow):
                         elif result_type == "error":
                                 self.cmd_output.append(str(result_text))
 
+        def closeEvent(self, event):
+                self.logic.stop_ps_session()
+                print("Application closing - cleaning up terminals!")
+                event.accept()
+
 app = QApplication(sys.argv)
 
 print(MainWindow.__init__)

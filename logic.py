@@ -18,6 +18,8 @@ class ActionLogic(QObject):
 
     @pyqtSlot(bool)
     def file_exit_action(self, checked=False):
+        self.stop_ps_session()
+        print("Application closing - cleaning up terminals!")
         QApplication.instance().quit()
 
     ###### SEARCH LOGIC ######
@@ -108,25 +110,55 @@ class ActionLogic(QObject):
         print("PowerShell session initialized successfully.")
         return True
 
+    
     def stop_ps_session(self):
         """
-        Clear $creds and terminate the PowerShell session.
+        Clear $GLOBAL:creds and terminate the persistent PowerShell session cleanly.
         """
         if not self.ps:
             return
+
         try:
-            self.run_ps("$creds = $null; Remove-Variable creds -ErrorAction SilentlyContinue; [GC]::Collect(); [GC]::WaitForPendingFinalizers(); Write-Output '[IOT] creds cleared'")
+            # Clear creds and try to stop any jobs/modules that might keep PS busy
+            cleanup_cmd = (
+                "$GLOBAL:creds = $null; "
+                "Remove-Variable -Name creds -Scope Global -ErrorAction SilentlyContinue; "
+                # Stop any background jobs to avoid Exit blocking
+                "Get-Job -State Running -ErrorAction SilentlyContinue | Stop-Job -ErrorAction SilentlyContinue; "
+                "Get-Job -ErrorAction SilentlyContinue | Remove-Job -Force -ErrorAction SilentlyContinue; "
+                # GC passes (same idea as your original)
+                "[GC]::Collect(); [GC]::WaitForPendingFinalizers(); "
+                "Write-Output '[IOT] creds cleared'"
+            )
+            # Use your existing run_ps() to execute cleanup inside the PS session
+            _ = self.run_ps(cleanup_cmd)
+        except Exception:
+            # Swallow cleanup errors to ensure we still close the process
+            pass
+
+        # Request shell to exit
+        try:
             with self._lock:
+                # Send Exit and flush to ensure it is delivered
                 self.ps.stdin.write("Exit\n")
                 self.ps.stdin.flush()
         except Exception:
+            # If stdin died, we'll still terminate below
             pass
-        finally:
+
+        # Wait a short time for the process to exit gracefully
+        try:
+            self.ps.wait(timeout=3)
+        except Exception:
+            # If it doesn't exit, force-terminate
             try:
                 self.ps.terminate()
             except Exception:
                 pass
-            self.ps = None
+
+        # Null out the handle
+        self.ps = None
+
 
     
     def run_ps(self, cmd: str, timeout: float = 30.0) -> str:
