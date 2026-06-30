@@ -132,11 +132,6 @@ class MainWindow(QMainWindow):
                 layout.addLayout(billing_section)
 
                 #Output Areas
-                layout.addWidget(QLabel("AD Information: "))
-                self.ad_output = QTextEdit()
-                self.ad_output.setReadOnly(True)
-                layout.addWidget(self.ad_output)
-
                 layout.addWidget(QLabel("CMD Output: "))
                 self.cmd_output = QTextEdit()
                 self.cmd_output.setReadOnly(True)
