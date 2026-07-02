@@ -5,6 +5,7 @@ from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction
 
 from logic import ActionLogic
+import ui.dialogs as dlg
 
 class CredentialDialog(QDialog):
         def __init__(self, parent=None):
@@ -25,8 +26,8 @@ class CredentialDialog(QDialog):
                         border: 1px solid #555;
                         border-radius: 6px;
                 }
-                QPushButton:hover { background-color: #3d3d3d; }
-                QPushButton:pressed { background-color: #2a2a2a; }
+                QPushButton:hover { background-color: #696969; }
+                QPushButton:pressed { background-color: #696969; }
                 """)
 
                 self.user_edit = QLineEdit()
@@ -80,8 +81,8 @@ class MainWindow(QMainWindow):
                         border: 1px solid #555;
                         border-radius: 6px;
                 }
-                QPushButton:hover { background-color: #3d3d3d; }
-                QPushButton:pressed { background-color: #2a2a2a; }
+                QPushButton:hover { background-color: #696969; }
+                QPushButton:pressed { background-color: #696969; }
                 """)
 
                 self.build_menu_bar()

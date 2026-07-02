@@ -4,6 +4,8 @@ import subprocess, base64, threading, time, queue
 from PyQt6.QtCore import pyqtSlot, QObject
 from PyQt6.QtWidgets import QApplication
 
+import ui.dialogs as dlg
+
 class ActionLogic(QObject):
     def __init__(self, ui):
         super().__init__(ui)
@@ -36,26 +38,43 @@ class ActionLogic(QObject):
     def btn_disableComp_pressed(self, checked=False):
         script = r".\PS_Scripts\DisableComputer.ps1"
         comp = self.ui.input_computer.text().strip()
+        warning = f"Are you sure you want to disable '{comp}'?"
 
         cmd = fr"& '{script}' -computer '{comp}'"
-        self.cmd_queue.put(cmd)
+        warning_popup = dlg.ConfimationDialog(text=warning, parent=self.ui)
+        if warning_popup.exec():
+            self.cmd_queue.put(cmd)
+        else:
+            return
 
     @pyqtSlot(bool)
     def btn_updateBilling_pressed(self, checked=False):
         script = r".\PS_Scripts\UpdateBilling.ps1"
         comp = self.ui.input_computer.text().strip()
         bill = self.ui.input_billing.text().strip()
+        warning = f"Are you sure you want to update '{comp}' billing to '{bill}'?"
 
         cmd = fr"& '{script}' -computer '{comp}' -billCode '{bill}'"
-        self.cmd_queue.put(cmd)
+
+        warning_popup = dlg.ConfimationDialog(text=warning, parent=self.ui)
+        if warning_popup.exec():
+            self.cmd_queue.put(cmd)
+        else:
+            return
 
     @pyqtSlot(bool)
     def btn_removeComp_pressed(self, checked=False):
         script = r".\PS_Scripts\RemoveComputer.ps1"
         comp = self.ui.input_computer.text().strip()
+        warning = f"Are you sure you want to remove '{comp}' from AD?"
 
         cmd = fr"& '{script}' -computer '{comp}'"
-        self.cmd_queue.put(cmd)
+        warning_popup = dlg.ConfimationDialog(text=warning, parent=self.ui)
+        if warning_popup.exec():
+            self.cmd_queue.put(cmd)
+        else:
+            return
+
 
     ###### Worker Loop ######
     def _worker_loop(self):
