@@ -118,6 +118,20 @@ class ActionLogic(QObject):
             self.ps=None
             return False
 
+        #Verify Credentials are correct
+        check_script = r".\PS_Scripts\VerifyCredentials.ps1"
+        verify_cmd = fr"& '{check_script}' -username '{username}' -pswd '{password}'"
+        verify_out = self.run_ps(verify_cmd).strip().lower()
+
+        
+        if verify_out not in ("true", "false"):
+            print(f"[verify] Unexpected output: {verify_out!r}")
+            return False
+        if verify_out != "true":
+            print("[verify] Credentials invalid.")
+            return False
+
+        #Initialize Creds
         script = r".\PS_Scripts\InitiateCreds.ps1"
         bootstrap = fr"& '{script}' -username '{username}' -pswd '{password}'"
         try:

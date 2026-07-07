@@ -7,57 +7,6 @@ from PyQt6.QtGui import QAction
 from logic import ActionLogic
 import ui.dialogs as dlg
 
-class CredentialDialog(QDialog):
-        def __init__(self, parent=None):
-                super().__init__(parent)
-                self.setWindowTitle("Secondary Account Sign-In")
-                self.setModal(True)
-
-                self.setStyleSheet("""
-                QMainWindow { background-color: #1e1e1e; color: #ddd; }
-                QDialog { background-color: #1e1e1e; color: #ddd; }
-                QLabel { color: #ddd; font-size: 14px; }
-                QLineEdit { background: #2b2b2b; color: #ddd; padding: 6px; border: 1px solid #444; }
-                QTextEdit { background: #2b2b2b; color: #ccc; border: 1px solid #444; }
-                QPushButton {
-                        background-color: #333; 
-                        color: white; 
-                        padding: 8px;
-                        border: 1px solid #555;
-                        border-radius: 6px;
-                }
-                QPushButton:hover { background-color: #696969; }
-                QPushButton:pressed { background-color: #696969; }
-                """)
-
-                self.user_edit = QLineEdit()
-                self.user_edit.setPlaceholderText("DOMAIN\\user")
-                self.pass_edit = QLineEdit()
-                self.pass_edit.setEchoMode(QLineEdit.EchoMode.Password)
-
-                form = QFormLayout()
-                form.addRow("Username:", self.user_edit)
-                form.addRow("Password:", self.pass_edit)
-
-                buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok |
-                                        QDialogButtonBox.StandardButton.Cancel, parent=self)
-                buttons.accepted.connect(self._on_accept)
-                buttons.rejected.connect(self.reject)
-
-                layout = QVBoxLayout(self)
-                layout.addLayout(form)
-                layout.addWidget(buttons)
-
-        
-        def _on_accept(self):
-                if not self.user_edit.text().strip() or not self.pass_edit.text():
-                        return
-                self.accept()
-
-        def values(self) -> tuple[str, str]:
-                return self.user_edit.text().strip(), self.pass_edit.text()
-
-
 class MainWindow(QMainWindow):
         def __init__(self):
                 super().__init__()
@@ -213,13 +162,8 @@ print(MainWindow.__init__)
 window = MainWindow()
 window.show()
 
-cred_dlg = CredentialDialog(window)
-if cred_dlg.exec() == QDialog.DialogCode.Accepted:
-        u, p = cred_dlg.values()
-        ok = window.logic.start_ps_session(u, p)
-        if not ok:
-                print("Powershell session failed to initialize.")
-else:
+cred_dlg = dlg.CredentialDialog(window)
+if cred_dlg.exec() == QDialog.DialogCode.Rejected:
         sys.exit(0)
 
 window.result_timer = QTimer()
