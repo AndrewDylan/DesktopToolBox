@@ -1,10 +1,20 @@
 import sys
-import subprocess, base64, threading, time, queue
+from pathlib import Path
+import subprocess, threading, time, queue
 
 from PyQt6.QtCore import pyqtSlot, QObject
 from PyQt6.QtWidgets import QApplication
 
 import ui.dialogs as dlg
+
+
+def resource_path(*parts) -> str:
+    """
+    Returns a real filesystem path for bundled resources.
+    Uses sys._MEIPASS in PyInstaller onefile builds.
+    """
+    base = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
+    return str(base.joinpath(*parts))
 
 class ActionLogic(QObject):
     def __init__(self, ui):
@@ -27,7 +37,7 @@ class ActionLogic(QObject):
     ###### SEARCH LOGIC ######
     @pyqtSlot(bool)
     def comp_searchBtn_pressed(self, checked=False):
-        script = r".\PS_Scripts\Get-ADComputer.ps1"
+        script = resource_path("PS_Scripts", "Get-ADComputer.ps1")
         comp = self.ui.input_computer.text().strip()
 
         cmd = fr"& '{script}' -computer '{comp}'"
@@ -36,12 +46,12 @@ class ActionLogic(QObject):
     ###### ACTIVE DIRECTORY LOGIC ######
     @pyqtSlot(bool)
     def btn_disableComp_pressed(self, checked=False):
-        script = r".\PS_Scripts\DisableComputer.ps1"
+        script = resource_path("PS_Scripts", "DisableComputer.ps1")
         comp = self.ui.input_computer.text().strip()
         warning = f"Are you sure you want to disable '{comp}'?"
 
         cmd = fr"& '{script}' -computer '{comp}'"
-        warning_popup = dlg.ConfimationDialog(text=warning, parent=self.ui)
+        warning_popup = dlg.ConfirmationDialog(text=warning, parent=self.ui)
         if warning_popup.exec():
             self.cmd_queue.put(cmd)
         else:
@@ -49,14 +59,14 @@ class ActionLogic(QObject):
 
     @pyqtSlot(bool)
     def btn_updateBilling_pressed(self, checked=False):
-        script = r".\PS_Scripts\UpdateBilling.ps1"
+        script = resource_path("PS_Scripts", "UpdateBilling.ps1")
         comp = self.ui.input_computer.text().strip()
         bill = self.ui.input_billing.text().strip()
         warning = f"Are you sure you want to update '{comp}' billing to '{bill}'?"
 
         cmd = fr"& '{script}' -computer '{comp}' -billCode '{bill}'"
 
-        warning_popup = dlg.ConfimationDialog(text=warning, parent=self.ui)
+        warning_popup = dlg.ConfirmationDialog(text=warning, parent=self.ui)
         if warning_popup.exec():
             self.cmd_queue.put(cmd)
         else:
@@ -64,12 +74,12 @@ class ActionLogic(QObject):
 
     @pyqtSlot(bool)
     def btn_removeComp_pressed(self, checked=False):
-        script = r".\PS_Scripts\RemoveComputer.ps1"
+        script = resource_path("PS_Scripts", "RemoveComputer.ps1")
         comp = self.ui.input_computer.text().strip()
         warning = f"Are you sure you want to remove '{comp}' from AD?"
 
         cmd = fr"& '{script}' -computer '{comp}'"
-        warning_popup = dlg.ConfimationDialog(text=warning, parent=self.ui)
+        warning_popup = dlg.ConfirmationDialog(text=warning, parent=self.ui)
         if warning_popup.exec():
             self.cmd_queue.put(cmd)
         else:
@@ -117,27 +127,13 @@ class ActionLogic(QObject):
             print("ERROR: PowerShell process terminated immediately.")
             self.ps=None
             return False
-
-        #Verify Credentials are correct
-        check_script = r".\PS_Scripts\VerifyCredentials.ps1"
-        verify_cmd = fr"& '{check_script}' -username '{username}' -pswd '{password}'"
-        verify_out = self.run_ps(verify_cmd).strip().lower()
-
         
-        if verify_out not in ("true", "false"):
-            print(f"[verify] Unexpected output: {verify_out!r}")
-            return False
-        if verify_out != "true":
-            print("[verify] Credentials invalid.")
+        #Verify Credentials
+        if not self.verify_credentials(username = username, password = password):
             return False
 
         #Initialize Creds
-        script = r".\PS_Scripts\InitiateCreds.ps1"
-        bootstrap = fr"& '{script}' -username '{username}' -pswd '{password}'"
-        try:
-            self.cmd_queue.put(("bootstrap", bootstrap))
-        except Exception as e:
-            print(f"ERROR: run_ps() failed during bootstrap: {e}")
+        if not self.init_credentials(username = username, password = password):
             return False
         
         print("PowerShell session initialized successfully.")
@@ -201,40 +197,58 @@ class ActionLogic(QObject):
         marker = "[IOT-END]"
         wrapped = f"{cmd} 2>&1; Write-Output '[IOT-FLUSH]'; Write-Output '{marker}'\n"
 
-        flush_seen = False
-        start_time = time.time()
-
-        # Write the command
+        
         with self._lock:
             try:
+                # ---- WRITE ----
                 self.ps.stdin.write(wrapped)
                 self.ps.stdin.flush()
             except Exception as e:
                 return f"[stdin error] {e}"
 
-        # ---- READ STDOUT UNTIL MARKER ----
-        stdout_lines = []
-        while True:
-            #Timeout protection
-            if time.time() - start_time > timeout:
-                return "[timeout] PowerShell command took too long."
-            
-            line = self.ps.stdout.readline()
-            if not line:
-                return "[error] PowerShell process closed the pipe"
-            
-            line = line.rstrip()
+                # ---- READ STDOUT UNTIL MARKER ----
+            stdout_lines = []
+            flush_seen = False
+            start_time = time.time()
 
-            if "[IOT-FLUSH]" in line:
-                flush_seen = True
-                continue
+            while True:
+                if time.time() - start_time > timeout:
+                    return "[timeout] PowerShell command took too long."
+                line = self.ps.stdout.readline()
+                if not line:
+                    return "[error] PowerShell process closed the pipe"
+                line = line.rstrip()
+                if "[IOT-FLUSH]" in line:
+                    flush_seen = True
+                    continue
+                if marker in line and flush_seen:
+                    break
+                stdout_lines.append(line)
 
-            if marker in line and flush_seen:
-                break
+        return "\n".join(stdout_lines)
+    
+    def verify_credentials(self, username: str, password: str):
+        check_script = resource_path("PS_Scripts", "VerifyCredentials.ps1")
+        verify_cmd = fr"& '{check_script}' -username '{username}' -pswd '{password}'"
+        verify_out = self.run_ps(verify_cmd).strip().lower()
 
-            stdout_lines.append(line)
-
-        stdout_text = "\n".join(stdout_lines)
-
-        return stdout_text
-
+        
+        if verify_out not in ("true", "false"):
+            print(f"[verify] Unexpected output: {verify_out!r}")
+            return False
+        if verify_out != "true":
+            print("[verify] Credentials invalid.")
+            return False
+        else:
+            print(f"[verify] Credientials valid!")
+            return True
+        
+    def init_credentials(self, username: str, password: str):
+        script = resource_path("PS_Scripts", "InitiateCreds.ps1")
+        bootstrap = fr"& '{script}' -username '{username}' -pswd '{password}'"
+        try:
+            self.cmd_queue.put(("bootstrap", bootstrap))
+            return True
+        except Exception as e:
+            print(f"ERROR: run_ps() failed during bootstrap: {e}")
+            return False

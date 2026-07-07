@@ -1,4 +1,28 @@
-([('PyQt6\\Qt6\\bin\\MSVCP140.dll',
+([('PS_Scripts\\DisableComputer.ps1',
+   'C:\\Users\\acanter\\OneDrive - State of '
+   'Indiana\\Documents\\DesktopToolBox\\PS_Scripts\\DisableComputer.ps1',
+   'DATA'),
+  ('PS_Scripts\\Get-ADComputer.ps1',
+   'C:\\Users\\acanter\\OneDrive - State of '
+   'Indiana\\Documents\\DesktopToolBox\\PS_Scripts\\Get-ADComputer.ps1',
+   'DATA'),
+  ('PS_Scripts\\InitiateCreds.ps1',
+   'C:\\Users\\acanter\\OneDrive - State of '
+   'Indiana\\Documents\\DesktopToolBox\\PS_Scripts\\InitiateCreds.ps1',
+   'DATA'),
+  ('PS_Scripts\\RemoveComputer.ps1',
+   'C:\\Users\\acanter\\OneDrive - State of '
+   'Indiana\\Documents\\DesktopToolBox\\PS_Scripts\\RemoveComputer.ps1',
+   'DATA'),
+  ('PS_Scripts\\UpdateBilling.ps1',
+   'C:\\Users\\acanter\\OneDrive - State of '
+   'Indiana\\Documents\\DesktopToolBox\\PS_Scripts\\UpdateBilling.ps1',
+   'DATA'),
+  ('PS_Scripts\\VerifyCredentials.ps1',
+   'C:\\Users\\acanter\\OneDrive - State of '
+   'Indiana\\Documents\\DesktopToolBox\\PS_Scripts\\VerifyCredentials.ps1',
+   'DATA'),
+  ('PyQt6\\Qt6\\bin\\MSVCP140.dll',
    'C:\\Users\\acanter\\AppData\\Roaming\\Python\\Python313\\site-packages\\PyQt6\\Qt6\\bin\\MSVCP140.dll',
    'BINARY'),
   ('PyQt6\\Qt6\\bin\\MSVCP140_1.dll',

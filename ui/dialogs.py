@@ -1,7 +1,19 @@
+import sys
+from pathlib import Path
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLabel, QLineEdit, QFormLayout, QMessageBox
 
-class ConfimationDialog(QDialog):
+
+def resource_path(*parts) -> str:
+    """
+    Returns a real filesystem path for bundled resources.
+    Uses sys._MEIPASS in PyInstaller onefile builds.
+    """
+    base = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
+    return str(base.joinpath(*parts))
+
+class ConfirmationDialog(QDialog):
     def __init__(self, text, parent=None):
                 super().__init__(parent)
                 self.setWindowTitle("Confirmation")
@@ -84,27 +96,18 @@ class CredentialDialog(QDialog):
                         return
                 u, p = self.values()
                 if self.window.logic.ps and self.window.logic.ps.poll() is None:
-                        check_script = r".\PS_Scripts\VerifyCredentials.ps1"
-                        verify_cmd = fr"& '{check_script}' -username '{u}' -pswd '{p}'"
-                        out = self.window.logic.run_ps(verify_cmd)
-                        print(f"[verify raw dialog] {out!r}")
-                        self.ok = "true" in out.strip().lower()
-
-                        #Initialize Creds
-                        script = r".\PS_Scripts\InitiateCreds.ps1"
-                        bootstrap = fr"& '{script}' -username '{u}' -pswd '{p}'"
-                        try:
-                                self.window.logic.cmd_queue.put(("bootstrap", bootstrap))
-                        except Exception as e:
-                                print(f"ERROR: run_ps() failed during bootstrap: {e}")
-                                return
+                        self.ok = self.window.logic.verify_credentials(username = u, password = p)
+                        if self.ok:
+                                #Initialize Creds
+                                if self.window.logic.init_credentials(username = u, password = p) == False:
+                                        print("[ERROR] failed to initialize credentials")
+                                        sys.exit(0)  
                 else:
                         self.ok = bool(self.window.logic.start_ps_session(u, p))
                 
-                if self.ok:
+                if self.ok:      
                         self.accept()  # close only on success
                 else:
-                        print("[verify] Credentials invalid.")
                         QMessageBox.warning(self, "Sign-in failed", "Invalid credentials. Please try again.")
                         return
 

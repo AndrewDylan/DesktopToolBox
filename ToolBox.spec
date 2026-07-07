@@ -5,7 +5,7 @@ a = Analysis(
     ['ToolBox.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('.\PS_Scripts', 'PS_Scripts')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
