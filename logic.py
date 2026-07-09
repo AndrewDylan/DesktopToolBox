@@ -115,7 +115,7 @@ class ActionLogic(QObject):
             self.ps = subprocess.Popen(
                 ["powershell", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-NoExit"],
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                text=True, bufsize=1
+                text=True, bufsize=1, creationflags=0x08000000
             )
         except Exception as e:
             print(f"ERROR: Failed to start PowerShell: {e}")

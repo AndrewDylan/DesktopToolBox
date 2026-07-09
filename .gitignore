@@ -1,0 +1,3 @@
+#Ignore package folders from pyinstaller
+dist/
+build/ 
