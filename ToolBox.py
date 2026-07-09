@@ -1,11 +1,20 @@
 import sys
+from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QDialog, QFormLayout, QDialogButtonBox, QMessageBox
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QIcon
 
 from logic import ActionLogic
 import ui.dialogs as dlg
+
+def resource_path(*parts) -> str:
+    """
+    Returns a real filesystem path for bundled resources.
+    Uses sys._MEIPASS in PyInstaller onefile builds.
+    """
+    base = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
+    return str(base.joinpath(*parts))
 
 class MainWindow(QMainWindow):
         def __init__(self):
@@ -157,7 +166,7 @@ class MainWindow(QMainWindow):
                 event.accept()
 
 app = QApplication(sys.argv)
-
+app.setWindowIcon(QIcon(resource_path("ToolBox_Images", "desktopIcon.jpg")))
 print(MainWindow.__init__)
 window = MainWindow()
 window.show()
