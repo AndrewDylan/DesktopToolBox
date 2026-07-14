@@ -42,6 +42,14 @@ class ActionLogic(QObject):
 
         cmd = fr"& '{script}' -computer '{comp}'"
         self.cmd_queue.put(cmd)
+
+        status_script = resource_path("PS_Scripts", "OnlineQuery.ps1")
+        status_cmd = fr"& '{status_script}' -computer '{comp}'"
+        status = self.cmd_queue.put(("online_query", status_cmd))
+        print(status)
+
+        while True:
+            break
     
     ###### ACTIVE DIRECTORY LOGIC ######
     @pyqtSlot(bool)
@@ -96,6 +104,9 @@ class ActionLogic(QObject):
                 if isinstance(cmd, tuple) and cmd[0] == "bootstrap":
                     result = self.run_ps(cmd[1])
                     self.result_queue.put(("bootstrap", result))
+                elif isinstance(cmd, tuple) and cmd[0] == "online_query":
+                   result = self.run_ps(cmd[1])
+                   self.result_queue.put(("online_query", result))
                 else:
                     result = self.run_ps(cmd)
                     self.result_queue.put(("normal", result))

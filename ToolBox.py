@@ -155,6 +155,18 @@ class MainWindow(QMainWindow):
                                 else:
                                         print("Bootstrap failed:", result_text)
                                         QApplication.instance().quit()
+                        elif result_type == "online_query":
+                                result = result_text.strip()
+                                print(result)
+                                if result == "True":
+                                        self.statusIndicator.setStyleSheet("background-color: #00FF00; border-radius: 6px;")
+                                        self.statusLabel.setText("Online")
+                                elif result == "False":
+                                        self.statusIndicator.setStyleSheet("background-color: #EE4B2B; border-radius: 6px;")
+                                        self.statusLabel.setText("Offline")
+                                else:
+                                        self.statusIndicator.setStyleSheet("background-color: #D3D3D3; border-radius: 6px;")
+                                        self.statusLabel = QLabel("Unknown")
                         elif result_type == "normal":
                                 self.cmd_output.append(str(result_text))
                         elif result_type == "error":
