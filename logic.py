@@ -34,6 +34,14 @@ class ActionLogic(QObject):
         print("Application closing - cleaning up terminals!")
         QApplication.instance().quit()
 
+    ###### NETWORK MENU ACTIONS ######
+    @pyqtSlot(bool)
+    def network_ping_action(self, check=False):
+        comp = self.ui.input_computer.text().strip()
+        cmd = fr"ping {comp}"
+        
+        self.cmd_queue.put(cmd)
+
     ###### SEARCH LOGIC ######
     @pyqtSlot(bool)
     def comp_searchBtn_pressed(self, checked=False):

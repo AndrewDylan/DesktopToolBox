@@ -131,6 +131,8 @@ class MainWindow(QMainWindow):
                 trace_action = QAction("CMD: Traceroute", self)
                 restart_action = QAction("CMD: Restart PC", self)
 
+                ping_action.triggered.connect(self.logic.network_ping_action)
+
                 net_menu.addAction(ping_action)
                 net_menu.addAction(trace_action)
                 net_menu.addAction(restart_action)
