@@ -127,16 +127,16 @@ class MainWindow(QMainWindow):
                 net_menu = menu_bar.addMenu("Network")
 
                 ping_action = QAction("CMD: Ping", self)
-                textConn_action = QAction("PS: Test-Connection", self)
+                testConn_action = QAction("PS: Test-Connection", self)
                 trace_action = QAction("CMD: Traceroute", self)
-                restart_action = QAction("CMD: Restart PC", self)
 
                 ping_action.triggered.connect(self.logic.network_ping_action)
+                testConn_action.triggered.connect(self.logic.network_testConn_action)
+                trace_action.triggered.connect(self.logic.network_trace_action)
 
                 net_menu.addAction(ping_action)
                 net_menu.addAction(trace_action)
-                net_menu.addAction(restart_action)
-                net_menu.addAction(textConn_action)
+                net_menu.addAction(testConn_action)
 
                 # Action Menu
                 action_menu = menu_bar.addMenu("Actions")
