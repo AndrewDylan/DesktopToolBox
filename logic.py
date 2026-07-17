@@ -42,6 +42,21 @@ class ActionLogic(QObject):
         
         self.cmd_queue.put(cmd)
 
+    @pyqtSlot(bool)
+    def network_testConn_action(self, check=False):
+        script = resource_path("PS_Scripts", "TestConnection.ps1")
+        comp = self.ui.input_computer.text().strip()
+
+        cmd = fr"& '{script}' -computer '{comp}'"
+        self.cmd_queue.put(cmd)
+    
+    @pyqtSlot(bool)
+    def network_trace_action(self, check=False):
+        comp = self.ui.input_computer.text().strip()
+        cmd = fr"tracert {comp}"
+
+        self.cmd_queue.put(cmd)
+
     ###### SEARCH LOGIC ######
     @pyqtSlot(bool)
     def comp_searchBtn_pressed(self, checked=False):
@@ -53,11 +68,8 @@ class ActionLogic(QObject):
 
         status_script = resource_path("PS_Scripts", "OnlineQuery.ps1")
         status_cmd = fr"& '{status_script}' -computer '{comp}'"
-        status = self.cmd_queue.put(("online_query", status_cmd))
-        print(status)
+        self.cmd_queue.put(("online_query", status_cmd))
 
-        while True:
-            break
     
     ###### ACTIVE DIRECTORY LOGIC ######
     @pyqtSlot(bool)
