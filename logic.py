@@ -57,6 +57,14 @@ class ActionLogic(QObject):
 
         self.cmd_queue.put(cmd)
 
+    @pyqtSlot(bool)
+    def action_os_build(self, check=False):
+        script = resource_path("PS_Scripts", "Get-OSBuild.ps1")
+        comp = self.ui.input_computer.text().strip()
+
+        cmd = fr"& '{script}' -computer '{comp}'"
+        self.cmd_queue.put(cmd)
+
     ###### SEARCH LOGIC ######
     @pyqtSlot(bool)
     def comp_searchBtn_pressed(self, checked=False):

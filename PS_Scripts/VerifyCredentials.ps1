@@ -15,4 +15,3 @@ $context = New-Object System.DirectoryServices.AccountManagement.PrincipalContex
 )
 
 $context.ValidateCredentials($username, $password)
-

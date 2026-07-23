@@ -143,9 +143,13 @@ class MainWindow(QMainWindow):
 
                 ipconfig_action = QAction("Ipconfig -all", self)
                 gpupdate_action = QAction("gpupdate", self)
+                osbuild_action = QAction("Get OS Build", self)
 
                 action_menu.addAction(ipconfig_action)
                 action_menu.addAction(gpupdate_action)
+                action_menu.addAction(osbuild_action)
+
+                osbuild_action.triggered.connect(self.logic.action_os_build)
 
         def check_worker_results(self):
                 while not self.logic.result_queue.empty():
@@ -170,9 +174,9 @@ class MainWindow(QMainWindow):
                                         self.statusIndicator.setStyleSheet("background-color: #D3D3D3; border-radius: 6px;")
                                         self.statusLabel = QLabel("Unknown")
                         elif result_type == "normal":
-                                self.cmd_output.append(str(result_text))
+                                self.cmd_output.append(str(result_text) + "\n==========================================================")
                         elif result_type == "error":
-                                self.cmd_output.append(str(result_text))
+                                self.cmd_output.append(str(result_text) + "\n==========================================================")
 
         def closeEvent(self, event):
                 self.logic.stop_ps_session()
